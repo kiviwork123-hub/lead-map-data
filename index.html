@@ -404,6 +404,7 @@ gpsBtn.style.fontWeight = "600";
 gpsBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
 
 document.body.appendChild(gpsBtn);
+```js
 
 gpsBtn.onclick = () => {
 
@@ -412,21 +413,34 @@ gpsBtn.onclick = () => {
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(
+  navigator.geolocation.watchPosition(
+
     (pos) => {
 
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      if (myMarker) {
-        myMarker.remove();
-      }
+      if (!myMarker) {
 
-      myMarker = new mapboxgl.Marker({
-        color: "#2563eb"
-      })
-      .setLngLat([lng, lat])
-      .addTo(map);
+        const dot = document.createElement("div");
+
+        dot.style.width = "18px";
+        dot.style.height = "18px";
+        dot.style.borderRadius = "50%";
+        dot.style.background = "#2563eb";
+        dot.style.border = "3px solid white";
+        dot.style.boxShadow =
+          "0 0 0 10px rgba(37,99,235,.25)";
+
+        myMarker = new mapboxgl.Marker(dot)
+          .setLngLat([lng, lat])
+          .addTo(map);
+
+      } else {
+
+        myMarker.setLngLat([lng, lat]);
+
+      }
 
       map.flyTo({
         center: [lng, lat],
@@ -435,13 +449,20 @@ gpsBtn.onclick = () => {
       });
 
     },
+
     (err) => {
-      alert("Vui lòng bật quyền vị trí");
       console.log(err);
+      alert("Vui lòng bật quyền vị trí");
     },
+
     {
-      enableHighAccuracy: true
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 10000
     }
+
   );
+
 };
-</script>
+```
+
