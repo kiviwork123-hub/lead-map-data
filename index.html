@@ -7,14 +7,12 @@
 
 <title>Lead Map</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
 
 <style>
-html,body{
+body{
     margin:0;
     padding:0;
-    height:100%;
-    font-family:Arial,sans-serif;
 }
 
 #map{
@@ -26,18 +24,11 @@ html,body{
     position:absolute;
     top:10px;
     left:10px;
-    z-index:9999;
+    z-index:10;
     background:white;
-    padding:12px;
-    border-radius:12px;
-    box-shadow:0 4px 12px rgba(0,0,0,.2);
-}
-
-.badge{
-    color:white;
-    padding:4px 8px;
-    border-radius:6px;
-    font-weight:bold;
+    padding:10px;
+    border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.2);
 }
 </style>
 </head>
@@ -46,124 +37,38 @@ html,body{
 
 <div class="info">
     <b>Lead Map</b><br>
-    Đang tải dữ liệu...
+    Mapbox OK 🚀
 </div>
 
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
 
 <script>
 
-const CSV_URL =
-"https://raw.githubusercontent.com/kiviwork123-hub/lead-map-data/main/lead-map%20(1)%20full%202.csv";
+mapboxgl.accessToken =
+'pk.eyJ1IjoiamFja2RvYW4iLCJhIjoiY21xcXhteHBpMGpoaTJwb29jeW55cnNkcCJ9.3A2FH2ggqtAiQJXfYpqXiQ';
 
-const map = L.map('map').setView([16.2,107.8],6);
-
-L.tileLayer(
-'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{
-    maxZoom:19
-}
-).addTo(map);
-
-const colors = {
-    ACB:"#2563eb",
-    VCB:"#16a34a",
-    TCB:"#f97316",
-    MBB:"#7c3aed",
-    BIDV:"#dc2626",
-    HDB:"#ca8a04",
-    MSB:"#0891b2",
-    VPB:"#15803d"
-};
-
-function getColor(bank){
-    return colors[bank] || "#6b7280";
-}
-
-fetch(CSV_URL)
-.then(r=>r.text())
-.then(csv=>{
-
-    const lines = csv.split("\n");
-
-    document.querySelector(".info").innerHTML =
-        "<b>Lead Map</b><br>" +
-        (lines.length-1).toLocaleString() +
-        " records";
-
-    for(let i=1;i<lines.length;i++){
-
-        const row = lines[i].split(",");
-
-        const lat = parseFloat(row[0]);
-        const lng = parseFloat(row[1]);
-
-        if(isNaN(lat) || isNaN(lng)) continue;
-
-        const bank = row[2] || "";
-        const tail3 = row[3] || "";
-        const qrType = row[4] || "";
-        const activeHours = row[5] || "";
-        const status = row[6] || "";
-
-        const marker = L.circleMarker(
-            [lat,lng],
-            {
-                radius:5,
-                color:getColor(bank),
-                fillColor:getColor(bank),
-                fillOpacity:0.9,
-                weight:1
-            }
-        );
-
-        marker.bindPopup(`
-            <div style="min-width:220px">
-
-                <div
-                style="
-                background:${getColor(bank)};
-                color:white;
-                display:inline-block;
-                padding:6px 10px;
-                border-radius:8px;
-                font-weight:bold;">
-                ${bank}
-                </div>
-
-                <h3>***${tail3}</h3>
-
-                <p>
-                <b>QR:</b> ${qrType}<br>
-                <b>Giờ hoạt động:</b> ${activeHours}<br>
-                <b>Trạng thái:</b> ${status}
-                </p>
-
-                <a
-                href="https://www.google.com/maps?q=${lat},${lng}"
-                target="_blank"
-                style="
-                background:#2563eb;
-                color:white;
-                padding:10px 12px;
-                border-radius:8px;
-                text-decoration:none;">
-                📍 Mở Google Maps
-                </a>
-
-            </div>
-        `);
-
-        marker.addTo(map);
-    }
-
-})
-.catch(err=>{
-    console.error(err);
-    alert("Không đọc được file CSV");
+const map = new mapboxgl.Map({
+    container:'map',
+    style:'mapbox://styles/mapbox/streets-v12',
+    center:[106.7,10.8],
+    zoom:5
 });
+
+new mapboxgl.Marker()
+.setLngLat([106.7009,10.7769])
+.setPopup(
+    new mapboxgl.Popup()
+    .setHTML(`
+        <h3>Test Marker</h3>
+        <a target="_blank"
+        href="https://www.google.com/maps?q=10.7769,106.7009">
+        Mở Google Maps
+        </a>
+    `)
+)
+.addTo(map);
 
 </script>
 
