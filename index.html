@@ -1,426 +1,38 @@
-```html
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>HCM Lead Map</title>
-
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet"/>
-
-<style>
-html,body{
-margin:0;
-height:100%;
-font-family:Inter,Arial,sans-serif;
-background:#f8fafc;
-}
-
-#map{
-position:absolute;
-inset:0;
-}
-
-.sidebar{
-position:absolute;
-top:15px;
-left:15px;
-z-index:999;
-width:300px;
-background:#fff;
-border-radius:20px;
-padding:18px;
-box-shadow:0 10px 30px rgba(0,0,0,.15);
-}
-
-.logo{
-font-size:24px;
-font-weight:700;
-}
-
-.count{
-margin-top:8px;
-color:#64748b;
-}
-
-.mapboxgl-popup-content{
-padding:0 !important;
-border-radius:20px !important;
-overflow:hidden;
-}
-
-.popup{
-width:340px;
-background:white;
-}
-
-.popup-head{
-padding:16px;
-}
-
-.badges{
-display:flex;
-flex-wrap:wrap;
-gap:6px;
-margin-bottom:12px;
-}
-
-.badge{
-padding:6px 12px;
-border-radius:999px;
-font-size:12px;
-font-weight:600;
-}
-
-.blue{
-background:#2563eb;
-color:white;
-}
-
-.light{
-background:#eef2ff;
-color:#2563eb;
-}
-
-.street{
-font-size:22px;
-font-weight:700;
-margin-bottom:5px;
-}
-
-.addr{
-font-size:14px;
-color:#64748b;
-}
-
-.grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-border-top:1px solid #eee;
-border-bottom:1px solid #eee;
-}
-
-.box{
-padding:14px;
-}
-
-.box:nth-child(2),
-.box:nth-child(4){
-border-left:1px solid #eee;
-}
-
-.box:nth-child(3),
-.box:nth-child(4){
-border-top:1px solid #eee;
-}
-
-.label{
-font-size:12px;
-color:#64748b;
-margin-bottom:6px;
-}
-
-.value{
-font-size:22px;
-font-weight:700;
-}
-
-.footer{
-padding:15px;
-}
-
-.btn{
-display:block;
-padding:14px;
-text-align:center;
-border-radius:14px;
-text-decoration:none;
-font-weight:700;
-background:linear-gradient(90deg,#ff3b82,#ff6a55);
-color:white;
-}
-</style>
-</head>
-
-<body>
-
-<div class="sidebar">
-<div class="logo">📍 HCM Lead Map</div>
-<div id="count" class="count">Loading...</div>
-</div>
-
-<div id="map"></div>
-
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
-
-<script>
-
-mapboxgl.accessToken =
-"pk.eyJ1IjoiamFja2RvYW4iLCJhIjoiY21xcXhteHBpMGpoaTJwb29jeW55cnNkcCJ9.3A2FH2ggqtAiQJXfYpqXiQ";
-
-const CSV_URL =
-"https://raw.githubusercontent.com/kiviwork123-hub/lead-map-data/main/hcm-full.csv";
-
-const map = new mapboxgl.Map({
-container:"map",
-style:"mapbox://styles/mapbox/light-v11",
-center:[106.7009,10.7769],
-zoom:10
-});
-
-function csvToGeoJSON(text){
-
-const lines=text.trim().split("\n");
-
-const features=[];
-
-for(let i=1;i<lines.length;i++){
-
-const row=lines[i].split(",");
-
-if(row.length<10) continue;
-
-const lat=parseFloat(row[0]);
-const lng=parseFloat(row[1]);
-
-if(isNaN(lat)||isNaN(lng)) continue;
-
-features.push({
-type:"Feature",
-geometry:{
-type:"Point",
-coordinates:[lng,lat]
-},
-properties:{
-bank:row[2]||"",
-tail3:row[3]||"",
-trans:row[4]||"",
-note:row[5]||"",
-pic:row[6]||"",
-district:row[7]||"",
-ward:row[8]||"",
-street:row[9]||""
-}
-});
-
-}
-
-return {
-type:"FeatureCollection",
-features
-};
-
-}
-
-fetch(CSV_URL)
-.then(r=>r.text())
-.then(text=>{
-
-const geojson = csvToGeoJSON(text);
-
-document.getElementById("count").innerHTML =
-geojson.features.length.toLocaleString() + " leads";
-
-map.on("load",()=>{
-
-map.addSource("leads",{
-type:"geojson",
-data:geojson,
-cluster:true,
-clusterRadius:50,
-clusterMaxZoom:14
-});
-
-map.addLayer({
-id:"clusters",
-type:"circle",
-source:"leads",
-filter:["has","point_count"],
-paint:{
-"circle-color":"#2563eb",
-"circle-radius":[
-"step",
-["get","point_count"],
-18,
-100,
-25,
-1000,
-35
-]
-}
-});
-
-map.addLayer({
-id:"cluster-count",
-type:"symbol",
-source:"leads",
-filter:["has","point_count"],
-layout:{
-"text-field":["get","point_count_abbreviated"],
-"text-size":12
-}
-});
-
-map.addLayer({
-id:"points",
-type:"circle",
-source:"leads",
-filter:["!",["has","point_count"]],
-paint:{
-"circle-color":"#ff4d6d",
-"circle-radius":6,
-"circle-stroke-width":1,
-"circle-stroke-color":"white"
-}
-});
-
-map.on("click","clusters",(e)=>{
-
-const feature =
-map.queryRenderedFeatures(
-e.point,
-{layers:["clusters"]}
-)[0];
-
-const clusterId =
-feature.properties.cluster_id;
-
-map.getSource("leads")
-.getClusterExpansionZoom(
-clusterId,
-(err,zoom)=>{
-
-if(err) return;
-
-map.easeTo({
-center:feature.geometry.coordinates,
-zoom
-});
-
-});
-
-});
-
-map.on("click","points",(e)=>{
-
-const p = e.features[0].properties;
-
-const lng = e.lngLat.lng;
-const lat = e.lngLat.lat;
-
-new mapboxgl.Popup({
-maxWidth:"360px"
-})
-.setLngLat([lng,lat])
-.setHTML(`
-<div class="popup">
-
-<div class="popup-head">
-
-<div class="badges">
-<span class="badge light">VietQR</span>
-<span class="badge blue">${p.bank}</span>
-<span class="badge blue">${p.tail3}</span>
-</div>
-
-<div class="street">
-${p.street || "-"}
-</div>
-
-<div class="addr">
-${p.ward || ""} ${p.district || ""}
-</div>
-
-</div>
-
-<div class="grid">
-
-<div class="box">
-<div class="label">GHI CHÚ</div>
-<div>${p.note || "-"}</div>
-</div>
-
-<div class="box">
-<div class="label">PIC</div>
-<div>${p.pic || "-"}</div>
-</div>
-
-<div class="box">
-<div class="label">SỐ GD</div>
-<div class="value">${p.trans || "-"}</div>
-</div>
-
-<div class="box">
-<div class="label">NGÂN HÀNG</div>
-<div>${p.bank}</div>
-</div>
-
-</div>
-
-<div class="footer">
-<a
-class="btn"
-target="_blank"
-href="https://www.google.com/maps?q=${lat},${lng}">
-📍 Mở Google Maps
-</a>
-</div>
-
-</div>
-`)
-.addTo(map);
-
-});
-
-});
-
-})
 .catch(err=>{
 console.error(err);
 alert("Không tải được CSV");
 });
 
-</script>
+// ===== GPS =====
 
-</body>
-</html>
-<script>
 let myMarker = null;
 
 const gpsBtn = document.createElement("button");
-gpsBtn.innerHTML = "📍 Vị trí của tôi";
+gpsBtn.innerHTML = "📍";
 
 gpsBtn.style.position = "absolute";
 gpsBtn.style.right = "15px";
 gpsBtn.style.bottom = "100px";
 gpsBtn.style.zIndex = "999";
-gpsBtn.style.padding = "12px 16px";
+gpsBtn.style.width = "56px";
+gpsBtn.style.height = "56px";
 gpsBtn.style.border = "none";
-gpsBtn.style.borderRadius = "12px";
+gpsBtn.style.borderRadius = "50%";
 gpsBtn.style.background = "#2563eb";
 gpsBtn.style.color = "#fff";
-gpsBtn.style.fontWeight = "600";
-gpsBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
 
 document.body.appendChild(gpsBtn);
-```js
 
 gpsBtn.onclick = () => {
 
-  if (!navigator.geolocation) {
-    alert("Thiết bị không hỗ trợ GPS");
-    return;
-  }
-
   navigator.geolocation.watchPosition(
 
-    (pos) => {
+    (pos)=>{
 
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      if (!myMarker) {
+      if(!myMarker){
 
         const dot = document.createElement("div");
 
@@ -428,41 +40,38 @@ gpsBtn.onclick = () => {
         dot.style.height = "18px";
         dot.style.borderRadius = "50%";
         dot.style.background = "#2563eb";
-        dot.style.border = "3px solid white";
+        dot.style.border = "3px solid #fff";
         dot.style.boxShadow =
           "0 0 0 10px rgba(37,99,235,.25)";
 
-        myMarker = new mapboxgl.Marker(dot)
-          .setLngLat([lng, lat])
+        myMarker =
+          new mapboxgl.Marker(dot)
+          .setLngLat([lng,lat])
           .addTo(map);
 
-      } else {
+      }else{
 
-        myMarker.setLngLat([lng, lat]);
+        myMarker.setLngLat([lng,lat]);
 
       }
 
       map.flyTo({
-        center: [lng, lat],
-        zoom: 17,
-        essential: true
+        center:[lng,lat],
+        zoom:17
       });
 
     },
 
-    (err) => {
+    (err)=>{
+      alert("Vui lòng cấp quyền vị trí");
       console.log(err);
-      alert("Vui lòng bật quyền vị trí");
     },
 
     {
-      enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 10000
+      enableHighAccuracy:true,
+      maximumAge:2000
     }
 
   );
 
 };
-```
-
