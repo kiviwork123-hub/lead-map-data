@@ -386,63 +386,68 @@ alert("Không tải được CSV");
 </body>
 </html>
 ```
-<script>
 let myMarker = null;
 
 const gpsBtn = document.createElement("button");
-gpsBtn.innerHTML = "📍 Vị trí của tôi";
-
-gpsBtn.style.position = "absolute";
-gpsBtn.style.right = "15px";
-gpsBtn.style.bottom = "100px";
-gpsBtn.style.zIndex = "999";
-gpsBtn.style.padding = "12px 16px";
-gpsBtn.style.border = "none";
-gpsBtn.style.borderRadius = "12px";
-gpsBtn.style.background = "#2563eb";
-gpsBtn.style.color = "#fff";
-gpsBtn.style.fontWeight = "600";
-gpsBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
-
-document.body.appendChild(gpsBtn);
-
+...
 gpsBtn.onclick = () => {
+  navigator.geolocation.getCurrentPosition(...)
+}
+// ===== LIVE GPS GIỐNG GOOGLE MAPS =====
 
-  if (!navigator.geolocation) {
-    alert("Thiết bị không hỗ trợ GPS");
-    return;
-  }
+let userMarker = null;
+let firstLocate = true;
 
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
+navigator.geolocation.watchPosition(
 
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+(position)=>{
 
-      if (myMarker) {
-        myMarker.remove();
-      }
+const lat = position.coords.latitude;
+const lng = position.coords.longitude;
 
-      myMarker = new mapboxgl.Marker({
-        color: "#2563eb"
-      })
-      .setLngLat([lng, lat])
-      .addTo(map);
+if(!userMarker){
 
-      map.flyTo({
-        center: [lng, lat],
-        zoom: 17,
-        essential: true
-      });
+const el = document.createElement("div");
 
-    },
-    (err) => {
-      alert("Vui lòng bật quyền vị trí");
-      console.log(err);
-    },
-    {
-      enableHighAccuracy: true
-    }
-  );
-};
-</script>
+el.style.width = "18px";
+el.style.height = "18px";
+el.style.borderRadius = "50%";
+el.style.background = "#2563eb";
+el.style.border = "3px solid white";
+el.style.boxShadow = "0 0 0 10px rgba(37,99,235,.25)";
+
+userMarker = new mapboxgl.Marker(el)
+.setLngLat([lng,lat])
+.addTo(map);
+
+}else{
+
+userMarker.setLngLat([lng,lat]);
+
+}
+
+if(firstLocate){
+
+map.flyTo({
+center:[lng,lat],
+zoom:16,
+speed:1.2
+});
+
+firstLocate = false;
+
+}
+
+},
+
+(error)=>{
+console.log("GPS:",error);
+},
+
+{
+enableHighAccuracy:true,
+maximumAge:2000,
+timeout:10000
+}
+
+);
