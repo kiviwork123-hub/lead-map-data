@@ -380,80 +380,9 @@ href="https://www.google.com/maps?q=${lat},${lng}">
 console.error(err);
 alert("Không tải được CSV");
 });
-let myMarker = null;
 
-const gpsBtn = document.createElement("button");
-gpsBtn.innerHTML = "📍";
-
-gpsBtn.style.position = "absolute";
-gpsBtn.style.right = "15px";
-gpsBtn.style.bottom = "100px";
-gpsBtn.style.zIndex = "999";
-gpsBtn.style.width = "56px";
-gpsBtn.style.height = "56px";
-gpsBtn.style.border = "none";
-gpsBtn.style.borderRadius = "50%";
-gpsBtn.style.background = "#2563eb";
-gpsBtn.style.color = "#fff";
-
-document.body.appendChild(gpsBtn);
-
-gpsBtn.onclick = () => {
-
-  navigator.geolocation.watchPosition(
-
-    (pos)=>{
-
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-
-      if(!myMarker){
-
-        const dot = document.createElement("div");
-
-        dot.style.width = "18px";
-        dot.style.height = "18px";
-        dot.style.borderRadius = "50%";
-        dot.style.background = "#2563eb";
-        dot.style.border = "3px solid #fff";
-        dot.style.boxShadow =
-          "0 0 0 10px rgba(37,99,235,.25)";
-
-        myMarker =
-          new mapboxgl.Marker(dot)
-          .setLngLat([lng,lat])
-          .addTo(map);
-
-      }else{
-
-        myMarker.setLngLat([lng,lat]);
-
-      }
-
-      map.flyTo({
-        center:[lng,lat],
-        zoom:17
-      });
-
-    },
-
-    (err)=>{
-      alert("Vui lòng cấp quyền vị trí");
-      console.log(err);
-    },
-
-    {
-      enableHighAccuracy:true,
-      maximumAge:2000
-    }
-
-  );
-
-};
-// Kết thúc GPS
-};
-
-// Kết thúc script
 </script>
----- 
-Sửa lại để tớ copy thôi, file cũ đang lỗi loading...
+
+</body>
+</html>
+```
