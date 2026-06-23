@@ -385,14 +385,6 @@ alert("Không tải được CSV");
 
 </body>
 </html>
-```
-let myMarker = null;
-
-const gpsBtn = document.createElement("button");
-...
-gpsBtn.onclick = () => {
-  navigator.geolocation.getCurrentPosition(...)
-}
 // ===== LIVE GPS GIỐNG GOOGLE MAPS =====
 
 let userMarker = null;
@@ -451,3 +443,78 @@ timeout:10000
 }
 
 );
+// ===== NÚT ĐỊNH VỊ + CHẤM XANH =====
+
+let myLocationMarker = null;
+
+const locateBtn = document.createElement("button");
+locateBtn.innerHTML = "📍";
+
+locateBtn.style.position = "absolute";
+locateBtn.style.right = "15px";
+locateBtn.style.bottom = "20px";
+locateBtn.style.width = "52px";
+locateBtn.style.height = "52px";
+locateBtn.style.border = "none";
+locateBtn.style.borderRadius = "50%";
+locateBtn.style.background = "#ffffff";
+locateBtn.style.fontSize = "24px";
+locateBtn.style.cursor = "pointer";
+locateBtn.style.zIndex = "999";
+locateBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
+
+document.body.appendChild(locateBtn);
+
+locateBtn.onclick = () => {
+
+  navigator.geolocation.getCurrentPosition(
+
+    (pos) => {
+
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      if (!myLocationMarker) {
+
+        const dot = document.createElement("div");
+
+        dot.style.width = "18px";
+        dot.style.height = "18px";
+        dot.style.borderRadius = "50%";
+        dot.style.background = "#1d4ed8";
+        dot.style.border = "3px solid white";
+        dot.style.boxShadow =
+          "0 0 0 10px rgba(29,78,216,.25)";
+
+        myLocationMarker =
+          new mapboxgl.Marker(dot)
+            .setLngLat([lng, lat])
+            .addTo(map);
+
+      } else {
+
+        myLocationMarker.setLngLat([lng, lat]);
+
+      }
+
+      map.flyTo({
+        center: [lng, lat],
+        zoom: 17,
+        speed: 1.2
+      });
+
+    },
+
+    (err) => {
+      alert("Không lấy được vị trí: " + err.message);
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+
+  );
+
+};
