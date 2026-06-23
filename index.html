@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -372,16 +373,13 @@ href="https://www.google.com/maps?q=${lat},${lng}">
 
 });
 
+});
+
 })
-
-});
 .catch(err=>{
-  console.error(err);
-  alert("Không tải được CSV");
+console.error(err);
+alert("Không tải được CSV");
 });
-
-// ===== GPS =====
-
 let myMarker = null;
 
 const gpsBtn = document.createElement("button");
@@ -397,27 +395,19 @@ gpsBtn.style.border = "none";
 gpsBtn.style.borderRadius = "50%";
 gpsBtn.style.background = "#2563eb";
 gpsBtn.style.color = "#fff";
-gpsBtn.style.fontSize = "24px";
-gpsBtn.style.cursor = "pointer";
-gpsBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
 
 document.body.appendChild(gpsBtn);
 
 gpsBtn.onclick = () => {
 
-  if (!navigator.geolocation) {
-    alert("Thiết bị không hỗ trợ GPS");
-    return;
-  }
-
   navigator.geolocation.watchPosition(
 
-    (pos) => {
+    (pos)=>{
 
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      if (!myMarker) {
+      if(!myMarker){
 
         const dot = document.createElement("div");
 
@@ -429,34 +419,41 @@ gpsBtn.onclick = () => {
         dot.style.boxShadow =
           "0 0 0 10px rgba(37,99,235,.25)";
 
-        myMarker = new mapboxgl.Marker(dot)
-          .setLngLat([lng, lat])
+        myMarker =
+          new mapboxgl.Marker(dot)
+          .setLngLat([lng,lat])
           .addTo(map);
 
-      } else {
+      }else{
 
-        myMarker.setLngLat([lng, lat]);
+        myMarker.setLngLat([lng,lat]);
 
       }
 
       map.flyTo({
-        center: [lng, lat],
-        zoom: 17
+        center:[lng,lat],
+        zoom:17
       });
 
     },
 
-    (err) => {
-      console.log(err);
+    (err)=>{
       alert("Vui lòng cấp quyền vị trí");
+      console.log(err);
     },
 
     {
-      enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 10000
+      enableHighAccuracy:true,
+      maximumAge:2000
     }
 
   );
 
 };
+// Kết thúc GPS
+};
+
+// Kết thúc script
+</script>
+---- 
+Sửa lại để tớ copy thôi, file cũ đang lỗi loading...
