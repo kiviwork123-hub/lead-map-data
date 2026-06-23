@@ -5,40 +5,47 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>HCM Lead Map</title>
+<title>Lead Map HCM</title>
 
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
 
 <style>
-body{
- margin:0;
- padding:0;
- font-family:Arial;
+html,body{
+margin:0;
+padding:0;
+height:100%;
+font-family:Arial,sans-serif;
 }
 
 #map{
- width:100%;
- height:100vh;
+width:100%;
+height:100%;
 }
 
-.info{
- position:absolute;
- top:10px;
- left:10px;
- z-index:999;
- background:white;
- padding:10px;
- border-radius:10px;
- box-shadow:0 2px 10px rgba(0,0,0,.2);
+.topbar{
+position:absolute;
+top:10px;
+left:10px;
+z-index:999;
+background:#fff;
+padding:10px 14px;
+border-radius:12px;
+box-shadow:0 2px 10px rgba(0,0,0,.15);
+}
+
+.count{
+font-size:13px;
+color:#666;
+margin-top:4px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="info">
- <b>HCM Lead Map</b><br>
- <span id="count">Loading...</span>
+<div class="topbar">
+<div><b>📍 HCM Lead Map</b></div>
+<div class="count" id="count">Loading...</div>
 </div>
 
 <div id="map"></div>
@@ -48,180 +55,213 @@ body{
 <script>
 
 mapboxgl.accessToken =
-'pk.eyJ1IjoiamFja2RvYW4iLCJhIjoiY21xcXhteHBpMGpoaTJwb29jeW55cnNkcCJ9.3A2FH2ggqtAiQJXfYpqXiQ';
-
-const map = new mapboxgl.Map({
- container:'map',
- style:'mapbox://styles/mapbox/light-v11',
- center:[106.7009,10.7769],
- zoom:10
-});
+'PASTE_MAPBOX_TOKEN_HERE';
 
 const CSV_URL =
-'https://raw.githubusercontent.com/kiviwork123-hub/lead-map-data/main/hcm-leads.csv';
+'https://raw.githubusercontent.com/kiviwork123-hub/lead-map-data/main/hcm-leads-full.csv';
+
+const map = new mapboxgl.Map({
+container:'map',
+style:'mapbox://styles/mapbox/light-v11',
+center:[106.7009,10.7769],
+zoom:10
+});
+
+function parseCSV(text){
+
+const lines=text.trim().split('\n');
+const headers=lines[0].split(',');
+
+const features=[];
+
+for(let i=1;i<lines.length;i++){
+
+const row=lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+
+if(!row) continue;
+
+const lat=parseFloat(row[0]?.replaceAll('"',''));
+const lng=parseFloat(row[1]?.replaceAll('"',''));
+
+if(isNaN(lat)||isNaN(lng)) continue;
+
+features.push({
+type:'Feature',
+geometry:{
+type:'Point',
+coordinates:[lng,lat]
+},
+properties:{
+bank:(row[2]||'').replaceAll('"',''),
+tail3:(row[3]||'').replaceAll('"',''),
+qrType:(row[4]||'').replaceAll('"',''),
+activeHours:(row[5]||'').replaceAll('"',''),
+status:(row[6]||'').replaceAll('"',''),
+trans:(row[7]||'').replaceAll('"',''),
+note:(row[8]||'').replaceAll('"',''),
+pic:(row[9]||'').replaceAll('"',''),
+district:(row[12]||'').replaceAll('"',''),
+ward:(row[13]||'').replaceAll('"',''),
+street:(row[14]||'').replaceAll('"','')
+}
+});
+
+}
+
+return {
+type:'FeatureCollection',
+features
+};
+
+}
 
 fetch(CSV_URL)
 .then(r=>r.text())
-.then(csv=>{
+.then(text=>{
 
- const lines = csv.trim().split('\n');
+const geojson=parseCSV(text);
 
- document.getElementById('count').innerText =
- (lines.length-1).toLocaleString() + ' leads';
+document.getElementById('count').innerText =
+geojson.features.length.toLocaleString() + ' leads';
 
- const geojson = {
-   type:'FeatureCollection',
-   features:[]
- };
+map.on('load',()=>{
 
- for(let i=1;i<lines.length;i++){
+map.addSource('leads',{
+type:'geojson',
+data:geojson,
+cluster:true,
+clusterRadius:50,
+clusterMaxZoom:14
+});
 
-   const row = lines[i].split(',');
+map.addLayer({
+id:'clusters',
+type:'circle',
+source:'leads',
+filter:['has','point_count'],
+paint:{
+'circle-color':'#2563eb',
+'circle-radius':[
+'step',
+['get','point_count'],
+20,
+100,
+28,
+1000,
+36
+]
+}
+});
 
-   const lat = parseFloat(row[0]?.replace(/"/g,''));
-   const lng = parseFloat(row[1]?.replace(/"/g,''));
+map.addLayer({
+id:'cluster-count',
+type:'symbol',
+source:'leads',
+filter:['has','point_count'],
+layout:{
+'text-field':['get','point_count_abbreviated'],
+'text-size':12
+}
+});
 
-   if(isNaN(lat)||isNaN(lng)) continue;
+map.addLayer({
+id:'points',
+type:'circle',
+source:'leads',
+filter:['!',['has','point_count']],
+paint:{
+'circle-color':'#ff4d6d',
+'circle-radius':5,
+'circle-stroke-width':1,
+'circle-stroke-color':'#fff'
+}
+});
 
-   geojson.features.push({
-      type:'Feature',
-      geometry:{
-         type:'Point',
-         coordinates:[lng,lat]
-      },
-      properties:{
-         bank:row[2]?.replace(/"/g,'') || '',
-         tail3:row[3]?.replace(/"/g,'') || '',
-         qrType:row[4]?.replace(/"/g,'') || '',
-         activeHours:row[5]?.replace(/"/g,'') || '',
-         status:row[6]?.replace(/"/g,'') || '',
-         district:row[8]?.replace(/"/g,'') || '',
-         ward:row[9]?.replace(/"/g,'') || '',
-         street:row[10]?.replace(/"/g,'') || ''
-      }
-   });
+map.on('click','clusters',(e)=>{
 
- }
+const feature=
+map.queryRenderedFeatures(
+e.point,
+{layers:['clusters']}
+)[0];
 
- map.on('load',()=>{
+const clusterId=
+feature.properties.cluster_id;
 
-   map.addSource('leads',{
-      type:'geojson',
-      data:geojson,
-      cluster:true,
-      clusterRadius:40,
-      clusterMaxZoom:14
-   });
+map.getSource('leads')
+.getClusterExpansionZoom(
+clusterId,
+(err,zoom)=>{
 
-   map.addLayer({
-      id:'clusters',
-      type:'circle',
-      source:'leads',
-      filter:['has','point_count'],
-      paint:{
-        'circle-color':'#2563eb',
-        'circle-radius':[
-          'step',
-          ['get','point_count'],
-          18,
-          100,
-          24,
-          1000,
-          32
-        ]
-      }
-   });
+if(err)return;
 
-   map.addLayer({
-      id:'cluster-count',
-      type:'symbol',
-      source:'leads',
-      filter:['has','point_count'],
-      layout:{
-        'text-field':['get','point_count_abbreviated'],
-        'text-size':12
-      }
-   });
-
-   map.addLayer({
-      id:'points',
-      type:'circle',
-      source:'leads',
-      filter:['!',['has','point_count']],
-      paint:{
-        'circle-color':'#ef4444',
-        'circle-radius':3
-      }
-   });
-
-   map.on('click','points',(e)=>{
-
-      const p = e.features[0].properties;
-
-      const lng = e.lngLat.lng;
-      const lat = e.lngLat.lat;
-
-      new mapboxgl.Popup()
-      .setLngLat([lng,lat])
-      .setHTML(`
-        <div style="min-width:240px">
-
-          <h3>${p.bank}</h3>
-
-          <p>
-          <b>Đuôi TK:</b> ${p.tail3}<br>
-          <b>QR:</b> ${p.qrType}<br>
-          <b>Giờ:</b> ${p.activeHours}<br>
-          <b>Trạng thái:</b> ${p.status}<br>
-          <b>Quận:</b> ${p.district}<br>
-          <b>Phường:</b> ${p.ward}<br>
-          <b>Đường:</b> ${p.street}
-          </p>
-
-          <a
-          target="_blank"
-          href="https://www.google.com/maps?q=${lat},${lng}">
-          📍 Mở Google Maps
-          </a>
-
-        </div>
-      `)
-      .addTo(map);
-
-   });
-
-   map.on('click','clusters',(e)=>{
-
-      const features =
-      map.queryRenderedFeatures(
-         e.point,
-         {layers:['clusters']}
-      );
-
-      const clusterId =
-      features[0].properties.cluster_id;
-
-      map.getSource('leads')
-      .getClusterExpansionZoom(
-      clusterId,
-      (err,zoom)=>{
-
-        if(err) return;
-
-        map.easeTo({
-           center:
-           features[0].geometry.coordinates,
-           zoom
-        });
-
-      });
-
-   });
-
- });
+map.easeTo({
+center:feature.geometry.coordinates,
+zoom
+});
 
 });
 
+});
+
+map.on('click','points',(e)=>{
+
+const p=e.features[0].properties;
+
+const lng=e.lngLat.lng;
+const lat=e.lngLat.lat;
+
+new mapboxgl.Popup({
+maxWidth:'380px'
+})
+.setLngLat([lng,lat])
+.setHTML(`
+<div style="font-family:Arial">
+
+<div style="margin-bottom:8px">
+<b>${p.bank}</b> • ${p.tail3}
+</div>
+
+<div style="margin-bottom:8px">
+📍 ${p.street}<br>
+${p.ward} ${p.district}
+</div>
+
+<div style="margin-bottom:8px">
+⏰ ${p.activeHours}
+</div>
+
+<div style="margin-bottom:8px">
+📈 GD: ${p.trans || '-'}
+</div>
+
+<div style="margin-bottom:8px">
+👤 PIC: ${p.pic || '-'}
+</div>
+
+<div style="margin-bottom:8px">
+📝 ${p.note || '-'}
+</div>
+
+<div style="margin-bottom:12px">
+${p.status}
+</div>
+
+<a
+target="_blank"
+href="https://www.google.com/maps?q=${lat},${lng}">
+📍 Google Maps
+</a>
+
+</div>
+`)
+.addTo(map);
+
+});
+
+});
+
+});
 </script>
 
 </body>
