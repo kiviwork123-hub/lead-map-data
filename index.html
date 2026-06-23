@@ -386,61 +386,75 @@ alert("Không tải được CSV");
 </body>
 </html>
 <script>
+// ===== GPS =====
+
 let myMarker = null;
+
 const gpsBtn = document.createElement("button");
-gpsBtn.innerHTML = "📍 Vị trí của tôi";
+gpsBtn.innerHTML = "📍";
 
 gpsBtn.style.position = "absolute";
 gpsBtn.style.right = "15px";
 gpsBtn.style.bottom = "100px";
 gpsBtn.style.zIndex = "999";
-gpsBtn.style.padding = "12px 16px";
+gpsBtn.style.width = "56px";
+gpsBtn.style.height = "56px";
 gpsBtn.style.border = "none";
-gpsBtn.style.borderRadius = "12px";
+gpsBtn.style.borderRadius = "50%";
 gpsBtn.style.background = "#2563eb";
 gpsBtn.style.color = "#fff";
-gpsBtn.style.fontWeight = "600";
-gpsBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
 
 document.body.appendChild(gpsBtn);
 
 gpsBtn.onclick = () => {
 
-  if (!navigator.geolocation) {
-    alert("Thiết bị không hỗ trợ GPS");
-    return;
-  }
+  navigator.geolocation.watchPosition(
 
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
+    (pos)=>{
 
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      if (myMarker) {
-        myMarker.remove();
+      if(!myMarker){
+
+        const dot = document.createElement("div");
+
+        dot.style.width = "18px";
+        dot.style.height = "18px";
+        dot.style.borderRadius = "50%";
+        dot.style.background = "#2563eb";
+        dot.style.border = "3px solid #fff";
+        dot.style.boxShadow =
+          "0 0 0 10px rgba(37,99,235,.25)";
+
+        myMarker =
+          new mapboxgl.Marker(dot)
+          .setLngLat([lng,lat])
+          .addTo(map);
+
+      }else{
+
+        myMarker.setLngLat([lng,lat]);
+
       }
 
-      myMarker = new mapboxgl.Marker({
-        color: "#2563eb"
-      })
-      .setLngLat([lng, lat])
-      .addTo(map);
-
       map.flyTo({
-        center: [lng, lat],
-        zoom: 17,
-        essential: true
+        center:[lng,lat],
+        zoom:17
       });
 
     },
-    (err) => {
-      alert("Vui lòng bật quyền vị trí");
+
+    (err)=>{
+      alert("Vui lòng cấp quyền vị trí");
       console.log(err);
     },
+
     {
-      enableHighAccuracy: true
+      enableHighAccuracy:true,
+      maximumAge:2000
     }
+
   );
+
 };
-</script>
