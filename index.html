@@ -288,7 +288,14 @@ source:"leads",
 filter:["!",["has","point_count"]],
 layout:{
 "text-field":["get","trans"],
-"text-size":11,
+"text-size":[
+"interpolate",
+["linear"],
+["zoom"],
+12,0,
+14,10,
+16,12
+],
 "text-offset":[0,1.5],
 "text-anchor":"top"
 },
@@ -445,10 +452,20 @@ gpsBtn.onclick = () => {
       if (myMarker) {
         myMarker.remove();
       }
+const dot = document.createElement("div");
 
-      myMarker = new mapboxgl.Marker({
-        color: "#2563eb"
-      })
+dot.style.width = "18px";
+dot.style.height = "18px";
+dot.style.borderRadius = "50%";
+dot.style.background = "#2563eb";
+dot.style.border = "3px solid white";
+dot.style.boxShadow =
+"0 0 0 8px rgba(37,99,235,.25)";
+
+myMarker = new mapboxgl.Marker(dot)
+.setLngLat([lng,lat])
+.addTo(map);
+     
       .setLngLat([lng, lat])
       .addTo(map);
 
