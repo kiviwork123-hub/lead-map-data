@@ -212,34 +212,8 @@ features
 };
 
 }
-async function loadNotes(){
 
-  try{
-
-    const r = await fetch("/api/get-notes");
-
-    const data = await r.json();
-
-    notesCache = {};
-
-    data.forEach(item=>{
-
-      notesCache[
-        item.lat + "_" + item.lng
-      ] = item;
-
-    });
-
-  }catch(e){
-
-    console.log(e);
-
-  }
-
-}
-loadNotes().then(()=>{
 fetch(CSV_URL)
-});
 .then(r=>r.text())
 .then(text=>{
 
@@ -501,51 +475,8 @@ margin-top:12px;
 </div>
 
 </div>
+
 <div class="footer">
-
-<input
-id="phone-${lat}-${lng}"
-value="${
-notesCache[lat+'_'+lng]?.phone || ''
-}"
-placeholder="Số điện thoại"
-style="
-width:100%;
-padding:10px;
-margin-bottom:10px;
-border:1px solid #ddd;
-border-radius:10px;
-box-sizing:border-box;
-">
-
-<textarea
-id="note-${lat}-${lng}"
-placeholder="Ghi chú khách hàng..."
-style="
-width:100%;
-height:80px;
-padding:10px;
-margin-bottom:10px;
-border:1px solid #ddd;
-border-radius:10px;
-box-sizing:border-box;
-">${notesCache[lat+'_'+lng]?.note || ''}</textarea>
-
-<button
-onclick="saveNote('${lat}','${lng}')"
-style="
-width:100%;
-padding:12px;
-border:none;
-border-radius:12px;
-background:#16a34a;
-color:white;
-font-weight:700;
-margin-bottom:10px;
-cursor:pointer;
-">
-✓ Lưu ghi chú
-</button>
 
 <a
 class="btn"
@@ -553,9 +484,6 @@ target="_blank"
 href="https://www.google.com/maps?q=${lat},${lng}">
 📍 Mở Google Maps
 </a>
-
-</div>
-
 
 <button
 onclick="openNote('${p.street}')"
@@ -588,15 +516,104 @@ cursor:pointer;
 console.error(err);
 alert("Không tải được CSV");
 });
+function openNote(id){
+
+const phone =
+localStorage.getItem(id+"_phone") || "";
+
+const note =
+localStorage.getItem(id+"_note") || "";
+
+const task =
+localStorage.getItem(id+"_task") || "";
+
+const html = `
+<div style="padding:15px">
+
+<h3>Thông tin khách hàng</h3>
+
+<input
+id="phone"
+placeholder="Số điện thoại"
+value="${phone}"
+style="
+width:100%;
+padding:10px;
+margin-bottom:10px;
+">
+
+<textarea
+id="note"
+placeholder="Ghi chú"
+style="
+width:100%;
+height:100px;
+margin-bottom:10px;
+">${note}</textarea>
+
+<textarea
+id="task"
+placeholder="Nhắc hẹn công việc"
+style="
+width:100%;
+height:80px;
+">${task}</textarea>
+
+<br><br>
+
+<button
+onclick="saveNote('${id}')"
+style="
+width:100%;
+padding:12px;
+background:#16a34a;
+color:white;
+border:none;
+border-radius:10px;
+font-weight:700;
+">
+💾 Lưu
+</button>
+
+</div>
+`;
+
+new mapboxgl.Popup({
+maxWidth:"450px"
+})
+.setLngLat(map.getCenter())
+.setHTML(html)
+.addTo(map);
 
 }
+function saveNote(id){
+
+localStorage.setItem(
+id+"_phone",
+document.getElementById("phone").value
+);
+
+localStorage.setItem(
+id+"_note",
+document.getElementById("note").value
+);
+
+localStorage.setItem(
+id+"_task",
+document.getElementById("task").value
+);
+
+alert("Đã lưu");
+
+}
+</script>
+
 </body>
 </html>
-
 ```
 <script>
 let myMarker = null;
-let notesCache = {};
+
 const gpsBtn = document.createElement("button");
 gpsBtn.innerHTML = "📍 Vị trí của tôi";
 
@@ -644,7 +661,7 @@ dot.style.boxShadow =
 myMarker = new mapboxgl.Marker(dot)
 .setLngLat([lng, lat])
 .addTo(map);
-     
+
       map.flyTo({
         center: [lng, lat],
         zoom: 17,
@@ -661,41 +678,4 @@ myMarker = new mapboxgl.Marker(dot)
     }
   );
 };
-  async function saveNote(lat,lng){
-
-  const phone =
-    document.getElementById(
-      `phone-${lat}-${lng}`
-    ).value;
-
-  const note =
-    document.getElementById(
-      `note-${lat}-${lng}`
-    ).value;
-
-  const res = await fetch(
-    "/api/save-note",
-    {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify({
-        lat,
-        lng,
-        phone,
-        note
-      })
-    }
-  );
-
-  const data = await res.json();
-
-  if(data.success){
-    alert("Đã lưu");
-  }else{
-    alert("Lỗi lưu dữ liệu");
-  }
-
-}
 </script>
