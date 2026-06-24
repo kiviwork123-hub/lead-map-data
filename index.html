@@ -287,7 +287,12 @@ type:"symbol",
 source:"leads",
 filter:["!",["has","point_count"]],
 layout:{
-"text-field":["get","trans"],
+"text-field":[
+"concat",
+["get","bank"],
+"\n",
+["get","trans"]
+],
 "text-size":[
 "interpolate",
 ["linear"],
@@ -449,9 +454,10 @@ gpsBtn.onclick = () => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      if (myMarker) {
-        myMarker.remove();
-      }
+  if (myMarker) {
+  myMarker.remove();
+}
+
 const dot = document.createElement("div");
 
 dot.style.width = "18px";
@@ -463,12 +469,9 @@ dot.style.boxShadow =
 "0 0 0 8px rgba(37,99,235,.25)";
 
 myMarker = new mapboxgl.Marker(dot)
-.setLngLat([lng,lat])
+.setLngLat([lng, lat])
 .addTo(map);
      
-      .setLngLat([lng, lat])
-      .addTo(map);
-
       map.flyTo({
         center: [lng, lat],
         zoom: 17,
