@@ -475,8 +475,48 @@ margin-top:12px;
 </div>
 
 </div>
-
 <div class="footer">
+
+<input
+id="phone-${lat}-${lng}"
+placeholder="Số điện thoại"
+style="
+width:100%;
+padding:10px;
+margin-bottom:10px;
+border:1px solid #ddd;
+border-radius:10px;
+box-sizing:border-box;
+">
+
+<textarea
+id="note-${lat}-${lng}"
+placeholder="Ghi chú khách hàng..."
+style="
+width:100%;
+height:80px;
+padding:10px;
+margin-bottom:10px;
+border:1px solid #ddd;
+border-radius:10px;
+box-sizing:border-box;
+"></textarea>
+
+<button
+onclick="saveNote('${lat}','${lng}')"
+style="
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+background:#16a34a;
+color:white;
+font-weight:700;
+margin-bottom:10px;
+cursor:pointer;
+">
+✓ Lưu ghi chú
+</button>
 
 <a
 class="btn"
@@ -484,6 +524,9 @@ target="_blank"
 href="https://www.google.com/maps?q=${lat},${lng}">
 📍 Mở Google Maps
 </a>
+
+</div>
+
 
 <button
 onclick="openNote('${p.street}')"
@@ -678,4 +721,41 @@ myMarker = new mapboxgl.Marker(dot)
     }
   );
 };
+  async function saveNote(lat,lng){
+
+  const phone =
+    document.getElementById(
+      `phone-${lat}-${lng}`
+    ).value;
+
+  const note =
+    document.getElementById(
+      `note-${lat}-${lng}`
+    ).value;
+
+  const res = await fetch(
+    "/api/save-note",
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        lat,
+        lng,
+        phone,
+        note
+      })
+    }
+  );
+
+  const data = await res.json();
+
+  if(data.success){
+    alert("Đã lưu");
+  }else{
+    alert("Lỗi lưu dữ liệu");
+  }
+
+}
 </script>
