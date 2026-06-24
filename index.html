@@ -231,12 +231,13 @@ async function loadNotes(){
     });
 
   }catch(e){
-
+});
     console.log(e);
 
   }
 
 }
+loadNotes().then(()=>{
 fetch(CSV_URL)
 .then(r=>r.text())
 .then(text=>{
@@ -503,6 +504,9 @@ margin-top:12px;
 
 <input
 id="phone-${lat}-${lng}"
+value="${
+notesCache[lat+'_'+lng]?.phone || ''
+}"
 placeholder="Số điện thoại"
 style="
 width:100%;
@@ -515,6 +519,9 @@ box-sizing:border-box;
 
 <textarea
 id="note-${lat}-${lng}"
+>${
+notesCache[lat+'_'+lng]?.note || ''
+}</textarea>
 placeholder="Ghi chú khách hàng..."
 style="
 width:100%;
