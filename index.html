@@ -239,6 +239,7 @@ async function loadNotes(){
 }
 loadNotes().then(()=>{
 fetch(CSV_URL)
+});
 .then(r=>r.text())
 .then(text=>{
 
@@ -519,9 +520,6 @@ box-sizing:border-box;
 
 <textarea
 id="note-${lat}-${lng}"
->${
-notesCache[lat+'_'+lng]?.note || ''
-}</textarea>
 placeholder="Ghi chú khách hàng..."
 style="
 width:100%;
@@ -531,7 +529,7 @@ margin-bottom:10px;
 border:1px solid #ddd;
 border-radius:10px;
 box-sizing:border-box;
-"></textarea>
+">${notesCache[lat+'_'+lng]?.note || ''}</textarea>
 
 <button
 onclick="saveNote('${lat}','${lng}')"
