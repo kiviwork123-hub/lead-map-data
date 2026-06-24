@@ -212,7 +212,31 @@ features
 };
 
 }
+async function loadNotes(){
 
+  try{
+
+    const r = await fetch("/api/get-notes");
+
+    const data = await r.json();
+
+    notesCache = {};
+
+    data.forEach(item=>{
+
+      notesCache[
+        item.lat + "_" + item.lng
+      ] = item;
+
+    });
+
+  }catch(e){
+
+    console.log(e);
+
+  }
+
+}
 fetch(CSV_URL)
 .then(r=>r.text())
 .then(text=>{
