@@ -212,8 +212,34 @@ features
 };
 
 }
+async function loadNotes(){
 
+  try{
+
+    const r = await fetch("/api/get-notes");
+
+    const data = await r.json();
+
+    notesCache = {};
+
+    data.forEach(item=>{
+
+      notesCache[
+        item.lat + "_" + item.lng
+      ] = item;
+
+    });
+
+  }catch(e){
+
+    console.log(e);
+
+  }
+
+}
+loadNotes().then(()=>{
 fetch(CSV_URL)
+});
 .then(r=>r.text())
 .then(text=>{
 
@@ -268,13 +294,120 @@ type:"circle",
 source:"leads",
 filter:["!",["has","point_count"]],
 paint:{
-"circle-color":"#ff4d6d",
-"circle-radius":6,
-"circle-stroke-width":1,
+
+"circle-color":[
+"match",
+["upcase",["get","bank"]],
+
+"TCB","#E11D48",
+"TECHCOMBANK","#E11D48",
+
+"VCB","#16A34A",
+"VIETCOMBANK","#16A34A",
+
+"BIDV","#22C55E",
+
+"VPB","#84CC16",
+"VPBANK","#84CC16",
+
+"ACB","#60A5FA",
+
+"SACOM","#2563EB",
+"STB","#2563EB",
+
+"MBBANK","#1D4ED8",
+"MB","#1D4ED8",
+
+"TPBANK","#7C3AED",
+"TPB","#7C3AED",
+
+"VIB","#F59E0B",
+
+"SHB","#F97316",
+
+"MSB","#F97316",
+
+"OCB","#22C55E",
+
+"HDBANK","#DC2626",
+
+"EXIMBANK","#0EA5E9",
+
+"ABBANK","#FACC15",
+
+"SEABANK","#DC2626",
+
+"NAMABANK","#10B981",
+
+"BACABANK","#2563EB",
+
+"PVCOMBANK","#14B8A6",
+
+"KIENLONGBANK","#65A30D",
+
+"VIETBANK","#EF4444",
+
+"VIETABANK","#2563EB",
+
+"SAIGONBANK","#0EA5E9",
+
+"WOORI","#1D4ED8",
+
+"PUBLICBANK","#22C55E",
+
+"CIMB","#DC2626",
+
+"UOB","#1E40AF",
+
+"HSBC","#DC2626",
+
+"STANDARD CHARTERED","#16A34A",
+
+"#6B7280"
+],
+
+"circle-radius":[
+"interpolate",
+["linear"],
+["zoom"],
+8,4,
+12,7,
+16,12
+],
+
+"circle-stroke-width":2,
 "circle-stroke-color":"white"
 }
 });
-
+map.addLayer({
+id:"trans-label",
+type:"symbol",
+source:"leads",
+filter:["!",["has","point_count"]],
+layout:{
+"text-field":[
+"concat",
+["get","bank"],
+"\n",
+["get","trans"]
+],
+"text-size":[
+"interpolate",
+["linear"],
+["zoom"],
+12,0,
+14,10,
+16,12
+],
+"text-offset":[0,1.5],
+"text-anchor":"top"
+},
+paint:{
+"text-color":"#111827",
+"text-halo-color":"#ffffff",
+"text-halo-width":1.5
+}
+});
 map.on("click","clusters",(e)=>{
 
 const feature =
@@ -331,7 +464,18 @@ ${p.street || "-"}
 <div class="addr">
 ${p.ward || ""} ${p.district || ""}
 </div>
-
+${p.image ? `
+<img
+src="${p.image}"
+style="
+width:100%;
+height:180px;
+object-fit:cover;
+border-radius:12px;
+margin-top:12px;
+"
+>
+` : ""}
 </div>
 
 <div class="grid">
@@ -357,14 +501,78 @@ ${p.ward || ""} ${p.district || ""}
 </div>
 
 </div>
-
 <div class="footer">
+
+<input
+id="phone-${lat}-${lng}"
+value="${
+notesCache[lat+'_'+lng]?.phone || ''
+}"
+placeholder="Số điện thoại"
+style="
+width:100%;
+padding:10px;
+margin-bottom:10px;
+border:1px solid #ddd;
+border-radius:10px;
+box-sizing:border-box;
+">
+
+<textarea
+id="note-${lat}-${lng}"
+placeholder="Ghi chú khách hàng..."
+style="
+width:100%;
+height:80px;
+padding:10px;
+margin-bottom:10px;
+border:1px solid #ddd;
+border-radius:10px;
+box-sizing:border-box;
+">${notesCache[lat+'_'+lng]?.note || ''}</textarea>
+
+<button
+onclick="saveNote('${lat}','${lng}')"
+style="
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+background:#16a34a;
+color:white;
+font-weight:700;
+margin-bottom:10px;
+cursor:pointer;
+">
+✓ Lưu ghi chú
+</button>
+
 <a
 class="btn"
 target="_blank"
 href="https://www.google.com/maps?q=${lat},${lng}">
 📍 Mở Google Maps
 </a>
+
+</div>
+
+
+<button
+onclick="openNote('${p.street}')"
+style="
+margin-top:10px;
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+background:#2563eb;
+color:white;
+font-weight:700;
+cursor:pointer;
+">
+📝 Ghi chú khách hàng
+</button>
+
 </div>
 
 </div>
@@ -381,14 +589,14 @@ console.error(err);
 alert("Không tải được CSV");
 });
 
-</script>
-
+}
 </body>
 </html>
+
 ```
 <script>
 let myMarker = null;
-
+let notesCache = {};
 const gpsBtn = document.createElement("button");
 gpsBtn.innerHTML = "📍 Vị trí của tôi";
 
@@ -419,16 +627,24 @@ gpsBtn.onclick = () => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      if (myMarker) {
-        myMarker.remove();
-      }
+  if (myMarker) {
+  myMarker.remove();
+}
 
-      myMarker = new mapboxgl.Marker({
-        color: "#2563eb"
-      })
-      .setLngLat([lng, lat])
-      .addTo(map);
+const dot = document.createElement("div");
 
+dot.style.width = "18px";
+dot.style.height = "18px";
+dot.style.borderRadius = "50%";
+dot.style.background = "#2563eb";
+dot.style.border = "3px solid white";
+dot.style.boxShadow =
+"0 0 0 8px rgba(37,99,235,.25)";
+
+myMarker = new mapboxgl.Marker(dot)
+.setLngLat([lng, lat])
+.addTo(map);
+     
       map.flyTo({
         center: [lng, lat],
         zoom: 17,
@@ -445,4 +661,41 @@ gpsBtn.onclick = () => {
     }
   );
 };
+  async function saveNote(lat,lng){
+
+  const phone =
+    document.getElementById(
+      `phone-${lat}-${lng}`
+    ).value;
+
+  const note =
+    document.getElementById(
+      `note-${lat}-${lng}`
+    ).value;
+
+  const res = await fetch(
+    "/api/save-note",
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        lat,
+        lng,
+        phone,
+        note
+      })
+    }
+  );
+
+  const data = await res.json();
+
+  if(data.success){
+    alert("Đã lưu");
+  }else{
+    alert("Lỗi lưu dữ liệu");
+  }
+
+}
 </script>
