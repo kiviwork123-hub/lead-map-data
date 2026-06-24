@@ -238,13 +238,31 @@ async function loadNotes(){
 
 }
 loadNotes().then(()=>{
+
 fetch(CSV_URL)
 .then(r=>r.text())
 .then(text=>{
+
+const geojson = csvToGeoJSON(text);
+
+document.getElementById("count").innerHTML =
+geojson.features.length.toLocaleString() + " leads";
+
+map.on("load",()=>{
+
+// TOÀN BỘ PHẦN
+// map.addSource(...)
+// map.addLayer(...)
+// map.on("click"...)
+// popup
+// bỏ nguyên vào đây
+
+});
+
 })
 .catch(err=>{
-  console.error(err);
-  alert("Không tải được CSV");
+console.error(err);
+alert("Không tải được CSV");
 });
 
 });
