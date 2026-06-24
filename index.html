@@ -239,10 +239,15 @@ async function loadNotes(){
 }
 loadNotes().then(()=>{
 fetch(CSV_URL)
-});
 .then(r=>r.text())
 .then(text=>{
+})
+.catch(err=>{
+  console.error(err);
+  alert("Không tải được CSV");
+});
 
+});
 const geojson = csvToGeoJSON(text);
 
 document.getElementById("count").innerHTML =
