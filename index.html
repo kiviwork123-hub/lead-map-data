@@ -215,29 +215,40 @@ features
 }
 function predictBusiness(active, trans){
 
-trans = Number(trans || 0);
+    trans = Number(trans || 0);
+    active = (active || "").trim();
 
-if(active.includes("5-12")){
-  if(trans > 100) return "Cafe / Ăn sáng";
-  if(trans > 50) return "Tạp hóa";
-  return "Cửa hàng nhỏ";
-}
+    // 5h-12h
+    if(active.includes("5-12")){
+        if(trans >= 120) return "Cafe";
+        if(trans >= 70) return "Quán ăn";
+        if(trans >= 35) return "Tiệm bánh";
+        return "Tạp hóa";
+    }
 
-if(active.includes("13-17")){
-  return "Shop / Dịch vụ";
-}
+    // 13h-17h
+    if(active.includes("13-17")){
+        if(trans >= 100) return "Siêu thị mini";
+        if(trans >= 60) return "Shop";
+        return "Dịch vụ";
+    }
 
-if(active.includes("18-23")){
-  if(trans > 80) return "Quán ăn";
-  return "Cafe tối";
-}
+    // 18h-23h
+    if(active.includes("18-23")){
+        if(trans >= 120) return "Quán nhậu";
+        if(trans >= 70) return "Quán ăn";
+        if(trans >= 35) return "Cafe";
+        return "Cửa hàng";
+    }
 
-if(active.includes("All Day")){
-  if(trans > 100) return "Mini Mart";
-  return "Tạp hóa";
-}
+    // Cả ngày
+    if(active.includes("All Day")){
+        if(trans >= 120) return "Siêu thị";
+        if(trans >= 70) return "Cửa hàng tiện lợi";
+        return "Tạp hóa";
+    }
 
-return "Chưa xác định";
+    return "Chưa xác định";
 }
 fetch(CSV_URL)
 .then(r=>r.text())
