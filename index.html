@@ -634,6 +634,7 @@ document.body.appendChild(gpsBtn);
 gpsBtn.onclick = () => {
 
 navigator.geolocation.watchPosition(
+
 (pos) => {
 
   const lat = pos.coords.latitude;
@@ -652,16 +653,41 @@ navigator.geolocation.watchPosition(
       "0 0 0 8px rgba(37,99,235,.25)";
 
     myMarker = new mapboxgl.Marker(dot)
-      .setLngLat([lng, lat])
+      .setLngLat([lng,lat])
       .addTo(map);
+
+    map.flyTo({
+      center:[lng,lat],
+      zoom:17
+    });
 
   } else {
 
-    myMarker.setLngLat([lng, lat]);
+    myMarker.setLngLat([lng,lat]);
+
+    map.easeTo({
+      center:[lng,lat],
+      duration:500
+    });
 
   }
 
 },
+
+(err)=>{
+  console.log(err);
+  alert("Vui lòng bật GPS");
+},
+
+{
+  enableHighAccuracy:true,
+  maximumAge:0,
+  timeout:10000
+}
+
+);
+
+};
 (err) => {
   console.log(err);
   alert("Vui lòng bật GPS");
