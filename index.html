@@ -160,7 +160,7 @@ mapboxgl.accessToken =
 "pk.eyJ1IjoiamFja2RvYW4iLCJhIjoiY21xcXhteHBpMGpoaTJwb29jeW55cnNkcCJ9.3A2FH2ggqtAiQJXfYpqXiQ";
 
 const CSV_URL =
-"https://raw.githubusercontent.com/kiviwork123-hub/lead-map-data/main/hcm-full.csv";
+"https://raw.githubusercontent.com/kiviwork123-hub/lead-map-data/main/hcm-full-active-hour.csv";
 
 const map = new mapboxgl.Map({
 container:"map",
@@ -179,7 +179,7 @@ for(let i=1;i<lines.length;i++){
 
 const row=lines[i].split(",");
 
-if(row.length<10) continue;
+if(row.length<11) continue;
 
 const lat=parseFloat(row[0]);
 const lng=parseFloat(row[1]);
@@ -196,11 +196,12 @@ properties:{
 bank:row[2]||"",
 tail3:row[3]||"",
 trans:row[4]||"",
-note:row[5]||"",
-pic:row[6]||"",
-district:row[7]||"",
-ward:row[8]||"",
-street:row[9]||""
+active:row[5]||"",
+note:row[6]||"",
+pic:row[7]||"",
+district:row[8]||"",
+ward:row[9]||"",
+street:row[10]||""
 }
 });
 
@@ -212,7 +213,32 @@ features
 };
 
 }
+function predictBusiness(active, trans){
 
+trans = Number(trans || 0);
+
+if(active.includes("5-12")){
+  if(trans > 100) return "Cafe / Ăn sáng";
+  if(trans > 50) return "Tạp hóa";
+  return "Cửa hàng nhỏ";
+}
+
+if(active.includes("13-17")){
+  return "Shop / Dịch vụ";
+}
+
+if(active.includes("18-23")){
+  if(trans > 80) return "Quán ăn";
+  return "Cafe tối";
+}
+
+if(active.includes("All Day")){
+  if(trans > 100) return "Mini Mart";
+  return "Tạp hóa";
+}
+
+return "Chưa xác định";
+}
 fetch(CSV_URL)
 .then(r=>r.text())
 .then(text=>{
@@ -468,7 +494,15 @@ margin-top:12px;
 <div class="label">SỐ GD</div>
 <div class="value">${p.trans || "-"}</div>
 </div>
+<div class="box">
+<div class="label">GIỜ HOẠT ĐỘNG</div>
+<div>${p.active || "-"}</div>
+</div>
 
+<div class="box">
+<div class="label">LOẠI HÌNH</div>
+<div>${predictBusiness(p.active,p.trans)}</div>
+</div>
 <div class="box">
 <div class="label">NGÂN HÀNG</div>
 <div>${p.bank}</div>
