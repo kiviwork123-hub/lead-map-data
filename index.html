@@ -244,7 +244,17 @@ fetch(CSV_URL)
 .then(text=>{
 
 const geojson = csvToGeoJSON(text);
+const CRM_API =
+"https://script.google.com/macros/s/AKfycbxA0v3DdxlLiLhtevV6OisilNFdi6Kyp4m03mqy2a9rUbAOOirE9qmIMVKYLaEIryV4Aw/exec";
 
+let crmData = [];
+
+fetch(CRM_API)
+  .then(r => r.json())
+  .then(data => {
+    crmData = data;
+    console.log("CRM loaded:", crmData.length);
+  });
 document.getElementById("count").innerHTML =
 geojson.features.length.toLocaleString() + " leads";
 
