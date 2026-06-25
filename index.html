@@ -645,6 +645,10 @@ fetch(
 "https://script.google.com/macros/s/AKfycbxA0v3DdxlLiLhtevV6OisilNFdi6Kyp4m03mqy2a9rUbAOOirE9qmIMVKYLaEIryV4Aw/exec",
 {
 method:"POST",
+mode:"no-cors",
+headers:{
+"Content-Type":"text/plain"
+},
 body:JSON.stringify({
 street:id,
 phone,
@@ -653,16 +657,16 @@ task
 })
 }
 )
-.then(r=>r.text())
 .then(()=>{
-alert("Đã lưu lên CRM");
+alert("Đã gửi dữ liệu");
 })
 .catch(err=>{
 console.log(err);
-alert("Lỗi lưu");
+alert("Lỗi");
 });
 
 }
+
 </script>
 
 ```
