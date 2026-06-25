@@ -667,6 +667,7 @@ alert("Lỗi lưu");
 
 ```
 <script>
+<script>
 let myMarker = null;
 
 const gpsBtn = document.createElement("button");
@@ -676,13 +677,6 @@ gpsBtn.style.position = "absolute";
 gpsBtn.style.right = "15px";
 gpsBtn.style.bottom = "100px";
 gpsBtn.style.zIndex = "999";
-gpsBtn.style.padding = "12px 16px";
-gpsBtn.style.border = "none";
-gpsBtn.style.borderRadius = "12px";
-gpsBtn.style.background = "#2563eb";
-gpsBtn.style.color = "#fff";
-gpsBtn.style.fontWeight = "600";
-gpsBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,.2)";
 
 document.body.appendChild(gpsBtn);
 
@@ -690,78 +684,41 @@ gpsBtn.onclick = () => {
 
 navigator.geolocation.watchPosition(
 
-(pos) => {
+(pos)=>{
 
-  const lat = pos.coords.latitude;
-  const lng = pos.coords.longitude;
+const lat = pos.coords.latitude;
+const lng = pos.coords.longitude;
 
-  if (!myMarker) {
+if(!myMarker){
 
-    const dot = document.createElement("div");
+myMarker = new mapboxgl.Marker()
+.setLngLat([lng,lat])
+.addTo(map);
 
-    dot.style.width = "18px";
-    dot.style.height = "18px";
-    dot.style.borderRadius = "50%";
-    dot.style.background = "#2563eb";
-    dot.style.border = "3px solid white";
-    dot.style.boxShadow =
-      "0 0 0 8px rgba(37,99,235,.25)";
+map.flyTo({
+center:[lng,lat],
+zoom:17
+});
 
-    myMarker = new mapboxgl.Marker(dot)
-      .setLngLat([lng,lat])
-      .addTo(map);
+}else{
 
-    map.flyTo({
-      center:[lng,lat],
-      zoom:17
-    });
+myMarker.setLngLat([lng,lat]);
 
-  } else {
-
-    myMarker.setLngLat([lng,lat]);
-
-    map.easeTo({
-      center:[lng,lat],
-      duration:500
-    });
-
-  }
+}
 
 },
 
 (err)=>{
-  console.log(err);
-  alert("Vui lòng bật GPS");
+alert("Vui lòng bật GPS");
+console.log(err);
 },
 
 {
-  enableHighAccuracy:true,
-  maximumAge:0,
-  timeout:10000
+enableHighAccuracy:true
 }
 
 );
 
-if(!window.firstLocate){
-
-  map.flyTo({
-    center:[lng,lat],
-    zoom:17
-  });
-
-  window.firstLocate = true;
-}
-    
-
-    },
-    (err) => {
-      alert("Vui lòng bật quyền vị trí");
-      console.log(err);
-    },
-    {
-      enableHighAccuracy: true
-    }
-  );
 };
 </script>
 
