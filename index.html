@@ -194,17 +194,36 @@ coordinates:[lng,lat]
 },
 const properties = {
 
-bank:row[2]||"",
-tail3:row[3]||"",
-trans:row[4]||"",
-active:row[5]||"",
-note:row[6]||"",
-pic:row[7]||"",
-district:row[8]||"",
-ward:row[9]||"",
-street:row[10]||""
+bank: row[2] || "",
+tail3: row[3] || "",
+trans: row[4] || "",
+active: row[5] || "",
+note: row[6] || "",
+pic: row[7] || "",
+district: row[8] || "",
+ward: row[9] || "",
+street: row[10] || ""
 
 };
+
+properties.business =
+predictBusiness(
+properties.active,
+properties.trans
+);
+
+features.push({
+
+type:"Feature",
+
+geometry:{
+type:"Point",
+coordinates:[lng,lat]
+},
+
+properties: properties
+
+});
 
 properties.business =
 predictBusiness(
