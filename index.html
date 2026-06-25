@@ -186,12 +186,6 @@ const lng=parseFloat(row[1]);
 
 if(isNaN(lat)||isNaN(lng)) continue;
 
-features.push({
-type:"Feature",
-geometry:{
-type:"Point",
-coordinates:[lng,lat]
-},
 const properties = {
 
 bank: row[2] || "",
