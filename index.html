@@ -633,20 +633,45 @@ document.body.appendChild(gpsBtn);
 
 gpsBtn.onclick = () => {
 
-  if (!navigator.geolocation) {
-    alert("Thiết bị không hỗ trợ GPS");
-    return;
+navigator.geolocation.watchPosition(
+(pos) => {
+
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+
+  if (!myMarker) {
+
+    const dot = document.createElement("div");
+
+    dot.style.width = "18px";
+    dot.style.height = "18px";
+    dot.style.borderRadius = "50%";
+    dot.style.background = "#2563eb";
+    dot.style.border = "3px solid white";
+    dot.style.boxShadow =
+      "0 0 0 8px rgba(37,99,235,.25)";
+
+    myMarker = new mapboxgl.Marker(dot)
+      .setLngLat([lng, lat])
+      .addTo(map);
+
+  } else {
+
+    myMarker.setLngLat([lng, lat]);
+
   }
 
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-
-  if (myMarker) {
-  myMarker.remove();
+},
+(err) => {
+  console.log(err);
+  alert("Vui lòng bật GPS");
+},
+{
+  enableHighAccuracy: true,
+  maximumAge: 0,
+  timeout: 10000
 }
+);
 
 const dot = document.createElement("div");
 
@@ -661,12 +686,16 @@ dot.style.boxShadow =
 myMarker = new mapboxgl.Marker(dot)
 .setLngLat([lng, lat])
 .addTo(map);
+if(!window.firstLocate){
 
-      map.flyTo({
-        center: [lng, lat],
-        zoom: 17,
-        essential: true
-      });
+  map.flyTo({
+    center:[lng,lat],
+    zoom:17
+  });
+
+  window.firstLocate = true;
+}
+    
 
     },
     (err) => {
