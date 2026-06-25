@@ -632,22 +632,35 @@ maxWidth:"450px"
 }
 function saveNote(id){
 
-localStorage.setItem(
-id+"_phone",
-document.getElementById("phone").value
-);
+const phone =
+document.getElementById("phone").value;
 
-localStorage.setItem(
-id+"_note",
-document.getElementById("note").value
-);
+const note =
+document.getElementById("note").value;
 
-localStorage.setItem(
-id+"_task",
-document.getElementById("task").value
-);
+const task =
+document.getElementById("task").value;
 
-alert("Đã lưu");
+fetch(
+"https://script.google.com/macros/s/AKfycbxA0v3DdxlLiLhtevV6OisilNFdi6Kyp4m03mqy2a9rUbAOOirE9qmIMVKYLaEIryV4Aw/exec",
+{
+method:"POST",
+body:JSON.stringify({
+street:id,
+phone,
+note,
+task
+})
+}
+)
+.then(r=>r.text())
+.then(()=>{
+alert("Đã lưu lên CRM");
+})
+.catch(err=>{
+console.log(err);
+alert("Lỗi lưu");
+});
 
 }
 </script>
